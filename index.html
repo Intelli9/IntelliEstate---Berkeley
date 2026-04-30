@@ -949,7 +949,7 @@ async function callAPI(prompt) {
   console.log('API response:', JSON.stringify(data).substring(0, 300));
   if (data.error) throw new Error(data.error);
   const text = (data.content || []).map(b => b.text || '').join('');
-  const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+  const clean = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/i, '').trim();
   console.log('Parsed text:', clean.substring(0, 200));
   return JSON.parse(clean);
 }
