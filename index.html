@@ -151,6 +151,8 @@
       <button class="nav-tab" onclick="showPage('investor',this)">Investor pack</button>
       <button class="nav-tab" onclick="showPage('valuation',this)">Valuation follow-up</button>
       <button class="nav-tab" onclick="showPage('landlord',this)">Landlord &amp; tenant</button>
+      <button class="nav-tab" onclick="showPage('calculator',this)">Calculator</button>
+      <button class="nav-tab" onclick="showPage('offer',this)">Offer &amp; negotiation</button>
     </div>
   </nav>
   <div class="content">
@@ -240,6 +242,22 @@
           <div class="tool-desc">Professional inspection reports, tenancy renewals, maintenance updates and end of tenancy communications.</div>
           <div class="tool-link">Open tool →</div>
         </div>
+        <div class="tool-card" onclick="showPage('calculator',document.querySelectorAll('.nav-tab')[11])">
+          <div class="tool-icon ic-teal">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#0F6E56" stroke-width="1.2" fill="none"/><path d="M5 5h2M9 5h2M5 8h2M9 8h2M5 11h2M9 11h2" stroke="#0F6E56" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="tool-name">Investment Calculator</div>
+          <div class="tool-desc">Instant gross yield, net yield, stamp duty, mortgage and cashflow calculations for any property.</div>
+          <div class="tool-link">Open tool →</div>
+        </div>
+        <div class="tool-card" onclick="showPage('offer',document.querySelectorAll('.nav-tab')[12])">
+          <div class="tool-icon ic-coral">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 3h3.5l-2.8 2 1 3.5L8 9l-3.2 1.5 1-3.5L3 5h3.5z" stroke="#993C1D" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="tool-name">Offer &amp; Negotiation Assistant</div>
+          <div class="tool-desc">Handle every offer professionally — vendor comms, negotiation strategy and buyer responses drafted instantly.</div>
+          <div class="tool-link">Open tool →</div>
+        </div>
       </div>
     </div>
 
@@ -287,8 +305,17 @@
         <div class="output-sec"><div class="output-sec-label">Property description</div><div class="output-text" id="c-desc"></div></div>
         <div class="output-sec"><div class="output-sec-label">Bullet highlights</div><div class="output-text" id="c-bullets"></div></div>
         <div class="output-sec"><div class="output-sec-label">Social caption</div><div class="output-text" id="c-social"></div></div>
+        <div class="output-sec" id="c-portal-section" style="display:none;">
+          <div class="output-sec-label">&#8594; Rightmove (max 80 char headline / 1000 char description)</div>
+          <div class="output-text" id="c-rightmove" style="margin-bottom:12px;"></div>
+          <div class="output-sec-label">&#8594; Zoopla (max 100 char headline / 1500 char description)</div>
+          <div class="output-text" id="c-zoopla" style="margin-bottom:12px;"></div>
+          <div class="output-sec-label">&#8594; OnTheMarket (max 80 char headline / 1000 char description)</div>
+          <div class="output-text" id="c-otm"></div>
+        </div>
         <div class="output-actions">
           <button class="sm-btn" onclick="copyText(['c-headline','c-desc','c-bullets','c-social'].map(id=>document.getElementById(id).textContent).join('\n\n'))">Copy all</button>
+          <button class="sm-btn" id="c-portal-btn" onclick="genPortalFormat()" style="display:none;">Format for portals</button>
           <button class="sm-btn" onclick="genCopy()">Regenerate</button>
         </div>
       </div>
@@ -620,8 +647,7 @@
           <button class="sm-btn" onclick="genInvestor()">Regenerate</button>
         </div>
       </div>
-    </div>
-
+    
     <!-- Valuation Follow-Up Agent -->
     <div class="page" id="page-valuation">
       <div class="page-header">
@@ -636,6 +662,13 @@
           <div class="field"><label>Days since valuation</label><input type="text" id="v-days" placeholder="e.g. 3"/></div>
           <div class="field full"><label>Key strengths you want to highlight</label><input type="text" id="v-strengths" placeholder="e.g. 75 years local expertise, strong recent sales in SE3, dedicated sales manager, no upfront fees"/></div>
           <div class="field full"><label>What you know about competing agents (optional)</label><textarea id="v-competition" placeholder="e.g. Foxtons quoted £700,000 which feels overpriced. Purple Bricks also pitched. Vendor seemed price-focused." style="min-height:60px;"></textarea></div>
+          <div class="field full"><label>Mode</label>
+            <div class="chip-row" id="v-mode">
+              <button class="chip active" onclick="pick(this,'v-mode');toggleValMode()">Post-valuation follow-up</button>
+              <button class="chip" onclick="pick(this,'v-mode');toggleValMode()">Pre-valuation prep</button>
+            </div>
+          </div>
+          <div id="v-followup-fields">
           <div class="field full"><label>Vendor situation</label>
             <div class="chip-row" id="v-situation">
               <button class="chip active" onclick="pick(this,'v-situation')">Comparing agents, ready to decide</button>
@@ -643,6 +676,12 @@
               <button class="chip" onclick="pick(this,'v-situation')">Gone quiet after valuation</button>
               <button class="chip" onclick="pick(this,'v-situation')">Considering overpriced rival quote</button>
             </div>
+          </div>
+          </div>
+          <div id="v-prep-fields" style="display:none;">
+          <div class="field full"><label>What you know about the vendor & property</label>
+            <textarea id="v-prep-notes" placeholder="e.g. Detached 4-bed in Wandsworth. Vendor looking to downsize after children left home. Has lived there 20 years. Spoken to Foxtons already. Emotional attachment to the property." style="min-height:70px;"></textarea>
+          </div>
           </div>
           <div class="field full"><label>Tone</label>
             <div class="chip-row" id="v-tone">
@@ -727,6 +766,122 @@
         <div class="output-actions">
           <button class="sm-btn" onclick="copyText(['lt-subject','lt-body','lt-summary','lt-action'].map(id=>''+document.getElementById(id).textContent).join('\n\n'))">Copy all</button>
           <button class="sm-btn" onclick="genLandlord()">Regenerate</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Investment Calculator -->
+    <div class="page" id="page-calculator">
+      <div class="page-header">
+        <div class="page-title">Investment Calculator</div>
+        <div class="page-sub">Instant property investment figures — no AI needed</div>
+      </div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="field"><label>Purchase price (£)</label><input type="number" id="calc-purchase" placeholder="e.g. 750000" oninput="runCalc()"/></div>
+          <div class="field"><label>Monthly rental income (£)</label><input type="number" id="calc-rent" placeholder="e.g. 3200" oninput="runCalc()"/></div>
+          <div class="field"><label>Annual service charge (£)</label><input type="number" id="calc-service" placeholder="e.g. 3000" oninput="runCalc()"/></div>
+          <div class="field"><label>Annual ground rent (£)</label><input type="number" id="calc-ground" placeholder="e.g. 500" oninput="runCalc()"/></div>
+          <div class="field"><label>Management fee (%)</label><input type="number" id="calc-mgmt" placeholder="e.g. 10" oninput="runCalc()"/></div>
+          <div class="field"><label>Deposit (%)</label><input type="number" id="calc-deposit" placeholder="e.g. 25" oninput="runCalc()"/></div>
+          <div class="field"><label>Mortgage interest rate (%)</label><input type="number" id="calc-rate" placeholder="e.g. 4.5" oninput="runCalc()"/></div>
+          <div class="field"><label>Mortgage term (years)</label><input type="number" id="calc-term" placeholder="e.g. 25" oninput="runCalc()"/></div>
+          <div class="field full"><label>Property type</label>
+            <div class="chip-row" id="calc-type">
+              <button class="chip active" onclick="pick(this,'calc-type');runCalc()">Additional property (BTL)</button>
+              <button class="chip" onclick="pick(this,'calc-type');runCalc()">First / main residence</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-card" id="calc-output" style="display:block;">
+        <div class="output-hdr"><span class="output-hdr-label">Investment figures</span></div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;padding:1.25rem;">
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Gross yield</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-gross">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Net yield</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-net">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Monthly mortgage</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-mortgage">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Monthly cashflow</div>
+            <div style="font-size:28px;font-weight:600;letter-spacing:-0.02em;" id="calc-cashflow">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Stamp duty (SDLT)</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-stamp">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Total upfront needed</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-total">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Loan amount</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-loan">—</div>
+          </div>
+          <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px;">
+            <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.06em;">Annual net income</div>
+            <div style="font-size:28px;font-weight:600;color:var(--color-text-primary);letter-spacing:-0.02em;" id="calc-annual-net">—</div>
+          </div>
+        </div>
+        <div style="padding:0 1.25rem 1.25rem;">
+          <div style="font-size:11px;color:var(--color-text-tertiary);line-height:1.6;padding:10px 12px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);">
+            Stamp duty calculated using UK rates as of 2025. Additional property surcharge (3%) applied for BTL purchases. Mortgage shown as repayment basis. This tool is for illustrative purposes — always verify with a qualified financial adviser.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Offer & Negotiation -->
+    <div class="page" id="page-offer">
+      <div class="page-header">
+        <div class="page-title">Offer &amp; Negotiation Assistant</div>
+        <div class="page-sub">Handle every offer professionally — from first bid to agreed sale</div>
+      </div>
+      <div class="form-card">
+        <div class="form-grid">
+          <div class="field"><label>Property address</label><input type="text" id="of-address" placeholder="e.g. 14 Blackheath Rise, SE3"/></div>
+          <div class="field"><label>Asking price</label><input type="text" id="of-asking" placeholder="e.g. £650,000"/></div>
+          <div class="field"><label>Offer received</label><input type="text" id="of-offer" placeholder="e.g. £610,000"/></div>
+          <div class="field"><label>Vendor's minimum acceptable (optional)</label><input type="text" id="of-minimum" placeholder="e.g. £630,000 — kept confidential"/></div>
+          <div class="field full"><label>Context about the buyer</label><textarea id="of-buyer-context" placeholder="e.g. First time buyer, mortgage agreed in principle, no chain, flexible on completion date, very keen on the property." style="min-height:60px;"></textarea></div>
+          <div class="field full"><label>Context about the vendor</label><textarea id="of-vendor-context" placeholder="e.g. Needs to complete by end of June due to onward purchase. Has had the property on 6 weeks. Emotionally attached but motivated to sell." style="min-height:60px;"></textarea></div>
+          <div class="field full"><label>Situation</label>
+            <div class="chip-row" id="of-situation">
+              <button class="chip active" onclick="pick(this,'of-situation')">First offer received</button>
+              <button class="chip" onclick="pick(this,'of-situation')">Counter-offer needed</button>
+              <button class="chip" onclick="pick(this,'of-situation')">Offer declined, keep buyer engaged</button>
+              <button class="chip" onclick="pick(this,'of-situation')">Best and final offers</button>
+              <button class="chip" onclick="pick(this,'of-situation')">Offer agreed — confirm to both parties</button>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="primary-btn" id="of-btn" onclick="genOffer()">Generate negotiation pack</button>
+          <button class="ghost-btn" onclick="clearForm(['of-address','of-asking','of-offer','of-minimum','of-buyer-context','of-vendor-context'],'of-output','of-err')">Clear</button>
+        </div>
+        <div class="err-text" id="of-err"></div>
+        <div class="loading-row" id="of-load"><div class="spinner"></div><span class="loading-text">Preparing your negotiation pack...</span></div>
+      </div>
+      <div class="output-card" id="of-output">
+        <div class="output-hdr"><span class="output-hdr-label">Negotiation pack</span></div>
+        <div class="output-sec"><div class="output-sec-label">Situation analysis</div><div class="output-text" id="of-analysis"></div></div>
+        <div class="output-sec"><div class="output-sec-label">Communication to vendor</div><div class="output-text" id="of-vendor-msg"></div></div>
+        <div class="output-sec"><div class="output-sec-label">Communication to buyer</div><div class="output-text" id="of-buyer-msg"></div></div>
+        <div class="output-sec"><div class="output-sec-label">Recommended negotiation strategy</div><div class="output-text" id="of-strategy"></div></div>
+        <div class="output-sec"><div class="output-sec-label">Suggested next step</div><div class="output-text" id="of-next"></div></div>
+        <div class="output-actions">
+          <button class="sm-btn" onclick="copyText(['of-analysis','of-vendor-msg','of-buyer-msg','of-strategy','of-next'].map(id=>document.getElementById(id).textContent).join('\n\n'))">Copy all</button>
+          <button class="sm-btn" onclick="copyText(document.getElementById('of-vendor-msg').textContent)">Copy vendor message</button>
+          <button class="sm-btn" onclick="copyText(document.getElementById('of-buyer-msg').textContent)">Copy buyer message</button>
+          <button class="sm-btn" onclick="genOffer()">Regenerate</button>
         </div>
       </div>
     </div>
@@ -828,6 +983,8 @@ Return ONLY valid JSON, no markdown, no backticks.`;
     document.getElementById('c-bullets').textContent = p.bullets || '';
     document.getElementById('c-social').textContent = p.social || '';
     document.getElementById('c-output').classList.add('visible');
+    document.getElementById('c-portal-btn').style.display = 'inline-block';
+    document.getElementById('c-portal-section').style.display = 'none';
   } catch(e) { showErr('c-err', 'Something went wrong. Please try again.'); }
   finally { setLoading('c-load', 'c-btn', false); }
 }
@@ -1027,26 +1184,19 @@ Return ONLY valid JSON, no markdown, no backticks.`;
 async function genInvestor() {
   const dev = document.getElementById('ip-dev').value.trim();
   const unit = document.getElementById('ip-unit').value.trim();
-  if (!dev || !unit) { showErr('ip-err', 'Please enter development name and unit details.'); return; }
-  hideErr('ip-err'); document.getElementById('ip-output').classList.remove('visible');
+  if (!dev || !unit) { showErr('ip-err', 'Please enter development name and unit type in Step 2.'); return; }
+  hideErr('ip-err');
+  document.getElementById('ip-output').classList.remove('visible');
   setLoading('ip-load', 'ip-btn', true);
-  const prompt = `You are an expert luxury London property investment analyst. Create a professional investor pack summary. Return ONLY a JSON object with keys: yield_analysis, capital_growth, area_fundamentals, development_highlights, narrative.
-- yield_analysis: 2-3 sentences covering gross yield calculation, net yield estimate and comparison to area average
-- capital_growth: 2-3 sentences making the capital growth case with reference to area trends, infrastructure and regeneration
-- area_fundamentals: 2-3 sentences on demand drivers, transport links, employment hubs and lifestyle credentials
-- development_highlights: 2-3 sentences on the development itself — developer reputation, specification, amenities and completion
-- narrative: A polished 3-4 sentence covering summary that brings it all together — the kind of opening paragraph an investor would read first
 
-Development: ${dev}
-Unit: ${unit}
-${document.getElementById('ip-rental').value ? 'Estimated rental value: ' + document.getElementById('ip-rental').value : ''}
-${document.getElementById('ip-yield').value ? 'Area average yield: ' + document.getElementById('ip-yield').value : ''}
-${document.getElementById('ip-area').value ? 'Area highlights: ' + document.getElementById('ip-area').value : ''}
-${document.getElementById('ip-highlights').value ? 'Development highlights: ' + document.getElementById('ip-highlights').value : ''}
-Investor type: ${getActive('ip-investor')}
-Return ONLY valid JSON, no markdown, no backticks.`;
+  var calcData = window.ipCalcData;
+  var calcSection = calcData ? 'CALCULATED FIGURES (use these exact numbers): Purchase price: £' + calcData.purchase.toLocaleString() + '. Monthly rent: £' + calcData.monthlyRent.toLocaleString() + '. Annual rent: £' + calcData.annualRent.toLocaleString() + '. Gross yield: ' + calcData.grossYield + '%. Net yield: ' + calcData.netYield + '%. Monthly mortgage: £' + calcData.monthlyMortgage.toLocaleString() + '. Monthly cashflow: £' + calcData.monthlyCashflow.toLocaleString() + '. Stamp duty: £' + calcData.stampDuty.toLocaleString() + '. Total upfront investment: £' + calcData.totalInvest.toLocaleString() + '.' : 'No financial figures provided - use general language.';
+
+  const prompt = 'You are an expert UK property investment analyst. Return ONLY a JSON object with keys: financial_summary, yield_analysis, capital_growth, area_fundamentals, development_highlights, narrative. financial_summary: 2-3 sentences summarising the key financial metrics using the exact calculated figures provided. Be specific with percentages and pound amounts. yield_analysis: 2-3 sentences analysing the yield in context. capital_growth: 2-3 sentences on capital growth case. area_fundamentals: 2-3 sentences on demand drivers and transport. development_highlights: 2-3 sentences on the development. narrative: polished 3-4 sentence executive summary. Development: ' + dev + '. Unit: ' + unit + '. Area: ' + (document.getElementById('ip-area').value || '') + '. Highlights: ' + (document.getElementById('ip-highlights').value || '') + '. Investor type: ' + getActive('ip-investor') + '. ' + calcSection + ' Return ONLY valid JSON, no markdown, no backticks.';
+
   try {
     const p = await callAPI(prompt);
+    document.getElementById('ip-fin-summary').textContent = p.financial_summary || '';
     document.getElementById('ip-yield-out').textContent = p.yield_analysis || '';
     document.getElementById('ip-capital').textContent = p.capital_growth || '';
     document.getElementById('ip-area-out').textContent = p.area_fundamentals || '';
@@ -1123,6 +1273,248 @@ Return ONLY valid JSON, no markdown, no backticks.`;
     document.getElementById('lt-output').classList.add('visible');
   } catch(e) { showErr('lt-err', 'Something went wrong. Please try again.'); }
   finally { setLoading('lt-load', 'lt-btn', false); }
+}
+
+function calcInvestor() {
+  var purchase = parseFloat(document.getElementById('ip-purchase').value) || 0;
+  var monthlyRent = parseFloat(document.getElementById('ip-monthly-rent').value) || 0;
+  var service = parseFloat(document.getElementById('ip-service').value) || 0;
+  var ground = parseFloat(document.getElementById('ip-ground').value) || 0;
+  var mgmtPct = parseFloat(document.getElementById('ip-mgmt').value) || 0;
+  var depositPct = parseFloat(document.getElementById('ip-deposit').value) || 25;
+  var rate = parseFloat(document.getElementById('ip-rate').value) || 0;
+  var term = parseFloat(document.getElementById('ip-term').value) || 25;
+
+  if (purchase === 0 || monthlyRent === 0) {
+    document.getElementById('ip-calc-results').style.display = 'none';
+    return;
+  }
+
+  var annualRent = monthlyRent * 12;
+  var mgmtFee = annualRent * (mgmtPct / 100);
+  var annualCosts = service + ground + mgmtFee;
+
+  // Gross yield
+  var grossYield = (annualRent / purchase) * 100;
+
+  // Net yield
+  var netAnnualIncome = annualRent - annualCosts;
+  var netYield = (netAnnualIncome / purchase) * 100;
+
+  // Mortgage calculation (repayment)
+  var loanAmount = purchase * (1 - depositPct / 100);
+  var monthlyRate = rate / 100 / 12;
+  var numPayments = term * 12;
+  var monthlyMortgage = 0;
+  if (monthlyRate > 0) {
+    monthlyMortgage = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+  } else {
+    monthlyMortgage = loanAmount / numPayments;
+  }
+
+  // Monthly cashflow
+  var monthlyCashflow = monthlyRent - monthlyMortgage - (annualCosts / 12);
+
+  // Stamp duty (UK additional property rates 2024)
+  var stampDuty = 0;
+  if (purchase <= 250000) {
+    stampDuty = purchase * 0.03;
+  } else if (purchase <= 925000) {
+    stampDuty = (250000 * 0.03) + ((purchase - 250000) * 0.08);
+  } else if (purchase <= 1500000) {
+    stampDuty = (250000 * 0.03) + (675000 * 0.08) + ((purchase - 925000) * 0.13);
+  } else {
+    stampDuty = (250000 * 0.03) + (675000 * 0.08) + (575000 * 0.13) + ((purchase - 1500000) * 0.15);
+  }
+
+  // Total investment needed (deposit + stamp duty)
+  var deposit = purchase * (depositPct / 100);
+  var totalInvest = deposit + stampDuty;
+
+  // Update UI
+  document.getElementById('ip-gross-yield').textContent = grossYield.toFixed(2) + '%';
+  document.getElementById('ip-net-yield').textContent = netYield.toFixed(2) + '%';
+  document.getElementById('ip-mortgage').textContent = '£' + Math.round(monthlyMortgage).toLocaleString();
+  document.getElementById('ip-cashflow').textContent = (monthlyCashflow >= 0 ? '+' : '') + '£' + Math.round(monthlyCashflow).toLocaleString();
+  document.getElementById('ip-cashflow').style.color = monthlyCashflow >= 0 ? '#1D9E75' : '#D85A30';
+  document.getElementById('ip-stamp').textContent = '£' + Math.round(stampDuty).toLocaleString();
+  document.getElementById('ip-total-invest').textContent = '£' + Math.round(totalInvest).toLocaleString();
+  document.getElementById('ip-calc-results').style.display = 'block';
+
+  // Store calculated values for AI prompt
+  window.ipCalcData = {
+    grossYield: grossYield.toFixed(2),
+    netYield: netYield.toFixed(2),
+    monthlyMortgage: Math.round(monthlyMortgage),
+    monthlyCashflow: Math.round(monthlyCashflow),
+    stampDuty: Math.round(stampDuty),
+    totalInvest: Math.round(totalInvest),
+    annualRent: Math.round(annualRent),
+    loanAmount: Math.round(loanAmount),
+    deposit: Math.round(deposit),
+    depositPct: depositPct,
+    purchase: purchase,
+    monthlyRent: monthlyRent
+  };
+}
+
+function clearInvestor() {
+  ['ip-purchase','ip-monthly-rent','ip-service','ip-ground','ip-mgmt','ip-deposit','ip-rate','ip-term','ip-dev','ip-unit','ip-area','ip-highlights'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('ip-calc-results').style.display = 'none';
+  document.getElementById('ip-output').classList.remove('visible');
+  document.getElementById('ip-err').classList.remove('visible');
+  window.ipCalcData = null;
+}
+
+function runCalc() {
+  var purchase = parseFloat(document.getElementById('calc-purchase').value) || 0;
+  var monthlyRent = parseFloat(document.getElementById('calc-rent').value) || 0;
+  var service = parseFloat(document.getElementById('calc-service').value) || 0;
+  var ground = parseFloat(document.getElementById('calc-ground').value) || 0;
+  var mgmtPct = parseFloat(document.getElementById('calc-mgmt').value) || 0;
+  var depositPct = parseFloat(document.getElementById('calc-deposit').value) || 25;
+  var rate = parseFloat(document.getElementById('calc-rate').value) || 0;
+  var term = parseFloat(document.getElementById('calc-term').value) || 25;
+  var isBTL = getActive('calc-type') === 'Additional property (BTL)';
+
+  if (purchase === 0) return;
+
+  var annualRent = monthlyRent * 12;
+  var mgmtFee = annualRent * (mgmtPct / 100);
+  var annualCosts = service + ground + mgmtFee;
+  var grossYield = monthlyRent > 0 ? (annualRent / purchase) * 100 : 0;
+  var netAnnual = annualRent - annualCosts;
+  var netYield = monthlyRent > 0 ? (netAnnual / purchase) * 100 : 0;
+
+  var loanAmount = purchase * (1 - depositPct / 100);
+  var monthlyRate = rate / 100 / 12;
+  var numPayments = term * 12;
+  var monthlyMortgage = 0;
+  if (rate > 0 && loanAmount > 0) {
+    monthlyMortgage = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / (Math.pow(1 + monthlyRate, numPayments) - 1);
+  }
+
+  var monthlyCashflow = monthlyRent - monthlyMortgage - (annualCosts / 12);
+
+  // Stamp duty
+  var stamp = 0;
+  var surcharge = isBTL ? 0.03 : 0;
+  if (purchase <= 250000) {
+    stamp = purchase * (0 + surcharge);
+  } else if (purchase <= 925000) {
+    stamp = (250000 * surcharge) + ((purchase - 250000) * (0.05 + surcharge));
+  } else if (purchase <= 1500000) {
+    stamp = (250000 * surcharge) + (675000 * (0.05 + surcharge)) + ((purchase - 925000) * (0.10 + surcharge));
+  } else {
+    stamp = (250000 * surcharge) + (675000 * (0.05 + surcharge)) + (575000 * (0.10 + surcharge)) + ((purchase - 1500000) * (0.12 + surcharge));
+  }
+
+  var deposit = purchase * (depositPct / 100);
+  var totalUpfront = deposit + stamp;
+
+  var fmt = function(n) { return '£' + Math.round(n).toLocaleString(); };
+  var pct = function(n) { return n.toFixed(2) + '%'; };
+
+  document.getElementById('calc-gross').textContent = monthlyRent > 0 ? pct(grossYield) : '—';
+  document.getElementById('calc-net').textContent = monthlyRent > 0 ? pct(netYield) : '—';
+  document.getElementById('calc-mortgage').textContent = rate > 0 ? fmt(monthlyMortgage) : '—';
+  document.getElementById('calc-cashflow').textContent = monthlyRent > 0 ? (monthlyCashflow >= 0 ? '+' : '') + fmt(monthlyCashflow) : '—';
+  document.getElementById('calc-cashflow').style.color = monthlyCashflow >= 0 ? '#1D9E75' : '#D85A30';
+  document.getElementById('calc-stamp').textContent = fmt(stamp);
+  document.getElementById('calc-total').textContent = fmt(totalUpfront);
+  document.getElementById('calc-loan').textContent = fmt(loanAmount);
+  document.getElementById('calc-annual-net').textContent = monthlyRent > 0 ? fmt(netAnnual) : '—';
+}
+
+// Portal formatter
+async function genPortalFormat() {
+  var headline = document.getElementById('c-headline').textContent;
+  var desc = document.getElementById('c-desc').textContent;
+  var bullets = document.getElementById('c-bullets').textContent;
+  if (!headline) { return; }
+  document.getElementById('c-portal-btn').textContent = 'Formatting...';
+
+  // Rightmove: 80 char headline, 1000 char description
+  var rmHeadline = headline.length > 80 ? headline.substring(0,77) + '...' : headline;
+  var rmDesc = (desc + '\n\n' + bullets).substring(0, 1000);
+
+  // Zoopla: 100 char headline, 1500 char description  
+  var zpHeadline = headline.length > 100 ? headline.substring(0,97) + '...' : headline;
+  var zpDesc = (desc + '\n\n' + bullets).substring(0, 1500);
+
+  // OnTheMarket: same as Rightmove
+  var otmHeadline = rmHeadline;
+  var otmDesc = rmDesc;
+
+  document.getElementById('c-rightmove').textContent = 'HEADLINE: ' + rmHeadline + '\n\nDESCRIPTION:\n' + rmDesc;
+  document.getElementById('c-zoopla').textContent = 'HEADLINE: ' + zpHeadline + '\n\nDESCRIPTION:\n' + zpDesc;
+  document.getElementById('c-otm').textContent = 'HEADLINE: ' + otmHeadline + '\n\nDESCRIPTION:\n' + otmDesc;
+  document.getElementById('c-portal-section').style.display = 'block';
+  document.getElementById('c-portal-btn').textContent = 'Reformat for portals';
+}
+
+// Toggle valuation mode
+function toggleValMode() {
+  var mode = getActive('v-mode');
+  var isPrep = mode === 'Pre-valuation prep';
+  document.getElementById('v-followup-fields').style.display = isPrep ? 'none' : 'block';
+  document.getElementById('v-prep-fields').style.display = isPrep ? 'block' : 'none';
+  document.getElementById('v-btn').textContent = isPrep ? 'Generate prep brief' : 'Generate follow-up';
+}
+
+// Updated genValuation to handle both modes
+var _origGenValuation = genValuation;
+async function genValuation() {
+  var mode = getActive('v-mode');
+  if (mode !== 'Pre-valuation prep') { return _origGenValuation(); }
+
+  // Pre-valuation prep mode
+  var vendor = document.getElementById('v-vendor').value.trim();
+  var address = document.getElementById('v-address').value.trim();
+  var notes = document.getElementById('v-prep-notes').value.trim();
+  if (!vendor || !address) { showErr('v-err', 'Please enter vendor name and property address.'); return; }
+  hideErr('v-err');
+  document.getElementById('v-output').classList.remove('visible');
+  setLoading('v-load', 'v-btn', true);
+
+  var prompt = 'You are an expert UK estate agent coach helping agents prepare for property valuations. Return ONLY a JSON object with keys: subject, body, verbal, next_step. subject: a subject line for a pre-valuation preparation brief. body: A structured valuation preparation brief covering: (1) Comparable evidence the agent should research and reference — specific to the area and property type. (2) Key questions to ask the vendor during the valuation visit. (3) Likely vendor concerns and how to address them. (4) A suggested pricing narrative — how to position the valuation figure confidently. (5) What to bring and how to present the agency professionally. verbal: 3-4 bullet points (each starting with -) of the most important things to establish rapport and win the instruction. next_step: The single most important thing to do immediately after the valuation visit. Vendor: ' + vendor + '. Property: ' + address + '. Notes: ' + (notes || 'No additional context provided.') + '. Return ONLY valid JSON, no markdown, no backticks.';
+
+  try {
+    var p = await callAPI(prompt);
+    document.getElementById('v-subject').textContent = 'Pre-valuation prep: ' + address;
+    document.getElementById('v-body').textContent = p.body || '';
+    document.getElementById('v-verbal').textContent = p.verbal || '';
+    document.getElementById('v-next').textContent = p.next_step || '';
+    document.getElementById('v-output').classList.add('visible');
+  } catch(e) { showErr('v-err', 'Something went wrong. Please try again.'); }
+  finally { setLoading('v-load', 'v-btn', false); }
+}
+
+// Offer & Negotiation
+async function genOffer() {
+  var address = document.getElementById('of-address').value.trim();
+  var asking = document.getElementById('of-asking').value.trim();
+  var offer = document.getElementById('of-offer').value.trim();
+  if (!address || !asking) { showErr('of-err', 'Please enter property address and asking price.'); return; }
+  hideErr('of-err');
+  document.getElementById('of-output').classList.remove('visible');
+  setLoading('of-load', 'of-btn', true);
+
+  var prompt = 'You are an expert UK estate agent negotiation coach. Help an agent handle a property offer professionally and strategically. Return ONLY a JSON object with keys: analysis, vendor_message, buyer_message, strategy, next_step. analysis: 2-3 sentences assessing the offer situation — is the offer reasonable, what is the negotiating position, what outcome is most likely achievable. vendor_message: A complete ready-to-send communication to the vendor presenting the offer professionally, giving a clear recommendation and asking for their instructions. Do NOT reveal the buyer minimum or any confidential information. vendor_message: Keep professional and warm. buyer_message: A complete ready-to-send communication to the buyer — keeping them engaged, managing expectations and moving toward agreement without giving away the vendor position. strategy: 3-4 bullet points (each starting with -) of the recommended negotiation strategy for the agent — specific tactical advice on how to achieve the best outcome for all parties. next_step: The single most important action to take in the next 24 hours. Property: ' + address + '. Asking price: ' + asking + '. Offer received: ' + (offer||'Not yet received') + '. Vendor minimum (confidential): ' + (document.getElementById('of-minimum').value||'Not specified') + '. Buyer context: ' + (document.getElementById('of-buyer-context').value||'Not provided') + '. Vendor context: ' + (document.getElementById('of-vendor-context').value||'Not provided') + '. Situation: ' + getActive('of-situation') + '. Return ONLY valid JSON, no markdown, no backticks.';
+
+  try {
+    var p = await callAPI(prompt);
+    document.getElementById('of-analysis').textContent = p.analysis || '';
+    document.getElementById('of-vendor-msg').textContent = p.vendor_message || '';
+    document.getElementById('of-buyer-msg').textContent = p.buyer_message || '';
+    document.getElementById('of-strategy').textContent = p.strategy || '';
+    document.getElementById('of-next').textContent = p.next_step || '';
+    document.getElementById('of-output').classList.add('visible');
+  } catch(e) { showErr('of-err', 'Something went wrong. Please try again.'); }
+  finally { setLoading('of-load', 'of-btn', false); }
 }
 </script>
 </body>
