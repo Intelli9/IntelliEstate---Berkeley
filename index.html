@@ -1437,43 +1437,28 @@ function toggleValMode() {
 // Valuation tool handles both modes
 async function genValuation() {
   var mode = getActive('v-mode');
-  if (mode !== 'Pre-valuation prep') {
-    // Post-valuation follow-up mode (original)
-    var vendor = document.getElementById('v-vendor').value.trim();
-    var address = document.getElementById('v-address').value.trim();
-    if (!vendor || !address) { showErr('v-err', 'Please enter vendor name and property address.'); return; }
-    hideErr('v-err');
-    document.getElementById('v-output').classList.remove('visible');
-    setLoading('v-load', 'v-btn', true);
-    var situation = getActive('v-situation');
-    var tone = getActive('v-tone');
-    var prompt = 'You are an expert UK estate agency sales coach helping agents win instructions after valuations. Return ONLY a JSON object with keys: subject, body, verbal, next_step. subject: A compelling subject line that feels personal not generic. body: A polished, persuasive follow-up email that feels genuinely personal. Address the vendor specific situation. 3-4 paragraphs, ready to send. verbal: 3-4 bullet points (each starting with -) of the most compelling things the agent should reinforce in a follow-up phone call. next_step: A single specific recommended next action with suggested timing. Vendor: ' + vendor + '. Property: ' + address + '. Our valuation: ' + (document.getElementById("v-price").value||"") + '. Days since valuation: ' + (document.getElementById("v-days").value||"") + '. Our key strengths: ' + (document.getElementById("v-strengths").value||"") + '. Competitor context: ' + (document.getElementById("v-competition").value||"") + '. Situation: ' + situation + '. Tone: ' + tone + '. Return ONLY valid JSON, no markdown, no backticks.';
-    try {
-      var p = await callAPI(prompt);
-      document.getElementById('v-subject').textContent = p.subject || '';
-      document.getElementById('v-body').textContent = p.body || '';
-      document.getElementById('v-verbal').textContent = p.verbal || '';
-      document.getElementById('v-next').textContent = p.next_step || '';
-      document.getElementById('v-output').classList.add('visible');
-    } catch(e) { showErr('v-err', 'Something went wrong. Please try again.'); }
-    finally { setLoading('v-load', 'v-btn', false); }
-    return;
-  }
-
-  // Pre-valuation prep mode
   var vendor = document.getElementById('v-vendor').value.trim();
   var address = document.getElementById('v-address').value.trim();
-  var notes = document.getElementById('v-prep-notes').value.trim();
   if (!vendor || !address) { showErr('v-err', 'Please enter vendor name and property address.'); return; }
   hideErr('v-err');
   document.getElementById('v-output').classList.remove('visible');
   setLoading('v-load', 'v-btn', true);
-
-  var prompt = 'You are an expert UK estate agent coach helping agents prepare for property valuations. Return ONLY a JSON object with keys: subject, body, verbal, next_step. subject: a subject line for a pre-valuation preparation brief. body: A structured valuation preparation brief covering: (1) Comparable evidence the agent should research and reference — specific to the area and property type. (2) Key questions to ask the vendor during the valuation visit. (3) Likely vendor concerns and how to address them. (4) A suggested pricing narrative — how to position the valuation figure confidently. (5) What to bring and how to present the agency professionally. verbal: 3-4 bullet points (each starting with -) of the most important things to establish rapport and win the instruction. next_step: The single most important thing to do immediately after the valuation visit. Vendor: ' + vendor + '. Property: ' + address + '. Notes: ' + (notes || 'No additional context provided.') + '. Return ONLY valid JSON, no markdown, no backticks.';
-
+  var prompt = '';
+  if (mode === 'Pre-valuation prep') {
+    var notes = document.getElementById('v-prep-notes').value.trim();
+    prompt = 'You are an expert UK estate agent coach helping agents prepare for property valuations. Return ONLY a JSON object with keys: subject, body, verbal, next_step. subject: Pre-valuation prep brief title. body: A structured preparation brief covering: (1) Comparable evidence to research. (2) Key questions to ask the vendor. (3) Likely concerns and how to address them. (4) Suggested pricing narrative. (5) What to bring. verbal: 3-4 bullet points (each starting with -) of the most important things to establish rapport and win the instruction. next_step: The single most important action immediately after the valuation. Vendor: ' + vendor + '. Property: ' + address + '. Notes: ' + (notes || 'None') + '. Return ONLY valid JSON, no markdown, no backticks.';
+  } else {
+    var situation = getActive('v-situation');
+    var tone = getActive('v-tone');
+    var price = document.getElementById('v-price').value || '';
+    var days = document.getElementById('v-days').value || '';
+    var strengths = document.getElementById('v-strengths').value || '';
+    var competition = document.getElementById('v-competition').value || '';
+    prompt = 'You are an expert UK estate agency sales coach helping agents win instructions after valuations. Return ONLY a JSON object with keys: subject, body, verbal, next_step. subject: A compelling personal subject line. body: A polished persuasive follow-up email addressing the vendor situation, 3-4 paragraphs ready to send. verbal: 3-4 bullet points (each starting with -) of things to reinforce in a follow-up call. next_step: A single specific recommended next action with timing. Vendor: ' + vendor + '. Property: ' + address + '. Our valuation: ' + price + '. Days since valuation: ' + days + '. Our strengths: ' + strengths + '. Competitor context: ' + competition + '. Situation: ' + situation + '. Tone: ' + tone + '. Return ONLY valid JSON, no markdown, no backticks.';
+  }
   try {
     var p = await callAPI(prompt);
-    document.getElementById('v-subject').textContent = 'Pre-valuation prep: ' + address;
+    document.getElementById('v-subject').textContent = mode === 'Pre-valuation prep' ? 'Pre-valuation prep: ' + address : (p.subject || '');
     document.getElementById('v-body').textContent = p.body || '';
     document.getElementById('v-verbal').textContent = p.verbal || '';
     document.getElementById('v-next').textContent = p.next_step || '';
@@ -1481,6 +1466,7 @@ async function genValuation() {
   } catch(e) { showErr('v-err', 'Something went wrong. Please try again.'); }
   finally { setLoading('v-load', 'v-btn', false); }
 }
+
 
 // Offer & Negotiation
 async function genOffer() {
