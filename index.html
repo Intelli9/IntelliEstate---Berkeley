@@ -293,7 +293,8 @@
           <div class="field"><label>Price</label><input type="text" id="c-price" placeholder="e.g. £4,200,000"/></div>
           <div class="field"><label>Size</label><input type="text" id="c-size" placeholder="e.g. 3,800 sq ft"/></div>
           <div class="field full"><label>Key features</label><input type="text" id="c-features" placeholder="e.g. private terrace, chef's kitchen, concierge, city views"/></div>
-          <div class="field full"><label>Location highlights</label><input type="text" id="c-location" placeholder="e.g. Tribeca, steps from Hudson River Park"/></div>
+          <div class="field full"><label>Location highlights</label><input type="text" id="c-location" placeholder="e.g. Close to Wandsworth town, good transport links, SW18"/></div>
+          <div class="field full"><label>SEO keywords — how buyers search for this property (optional)</label><input type="text" id="c-seo" placeholder="e.g. 4 bedroom house Wandsworth garden, family home near Wandsworth town centre, SW18 period property"/></div>
           <div class="field full"><label>Target buyer</label>
             <div class="chip-row" id="c-buyer">
               <button class="chip active" onclick="pick(this,'c-buyer')">End-user / family</button>
@@ -1052,21 +1053,15 @@ async function genCopy() {
   hideErr('c-err');
   document.getElementById('c-output').classList.remove('visible');
   setLoading('c-load', 'c-btn', true);
-  const prompt = `You are an expert luxury real estate copywriter for luxury new developments. Return ONLY a JSON object with keys: headline, description, bullets, social.
-- headline: max 12 words
-- description: 3-4 polished evocative sentences
-- bullets: exactly 5 bullet points each starting with -
-- social: max 40 words, no hashtags
-
-Development: ${dev}
-Unit: ${unit}
-${document.getElementById('c-price').value ? 'Price: ' + document.getElementById('c-price').value : ''}
-${document.getElementById('c-size').value ? 'Size: ' + document.getElementById('c-size').value : ''}
-${document.getElementById('c-features').value ? 'Features: ' + document.getElementById('c-features').value : ''}
-${document.getElementById('c-location').value ? 'Location: ' + document.getElementById('c-location').value : ''}
-Buyer: ${getActive('c-buyer')}
-Tone: ${getActive('c-tone')}
-Return ONLY valid JSON, no markdown, no backticks.`;
+  const features = document.getElementById('c-features').value.trim();
+  const location = document.getElementById('c-location').value.trim();
+  const seoKeywords = document.getElementById('c-seo') ? document.getElementById('c-seo').value.trim() : '';
+  const price = document.getElementById('c-price').value.trim();
+  const size = document.getElementById('c-size').value.trim();
+  const buyer = getActive('c-buyer');
+  const tone = getActive('c-tone');
+  const mode = getActive('c-mode');
+  const prompt = 'You are an expert luxury property copywriter and SEO specialist. Return ONLY a JSON object with keys: headline, description, bullets, social. headline: A compelling property headline under 80 characters — aspirational, evocative, must naturally include the property type and location for SEO (e.g. "The Wandsworth family home that redefines space"). description: A polished property description of 150-200 words. Naturally weave in the provided SEO keywords throughout — they must read organically, never forced. The description should rank on Google when buyers search those terms while also feeling premium and considered. bullets: 5-6 key highlights as a bulleted list starting with -. Each bullet should where possible include a searchable detail (bedrooms, location, feature). social: A social media caption under 100 words with location hashtag. For off-plan mode focus on selling the vision and lifestyle. SEO keywords to embed naturally: ' + (seoKeywords || 'use the property type, location and key features as natural search terms') + '. Property: ' + dev + '. Unit: ' + unit + '. Price: ' + price + '. Size: ' + size + '. Features: ' + features + '. Location: ' + location + '. Target buyer: ' + buyer + '. Tone: ' + tone + '. Mode: ' + mode + '. Return ONLY valid JSON, no markdown, no backticks.';
   try {
     const p = await callAPI(prompt);
     document.getElementById('c-headline').textContent = p.headline || '';
@@ -1079,6 +1074,7 @@ Return ONLY valid JSON, no markdown, no backticks.`;
   } catch(e) { showErr('c-err', 'Something went wrong. Please try again.'); }
   finally { setLoading('c-load', 'c-btn', false); }
 }
+
 
 async function genFollowup() {
   const buyer = document.getElementById('f-buyer').value.trim();
