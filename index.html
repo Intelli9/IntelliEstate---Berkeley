@@ -579,19 +579,29 @@
     <div class="page" id="page-social">
       <div class="page-header">
         <div class="page-title">Social Media Generator</div>
-        <div class="page-sub">SEO and GEO-optimised content from one brief</div>
+        <div class="page-sub">SEO and GEO-optimised content that builds your search presence over time</div>
       </div>
       <div class="form-card">
         <div class="form-grid">
-          <div class="field"><label>Development name</label><input type="text" id="sm-dev" placeholder="e.g. The Ashford Residences, Nine Elms"/></div>
-          <div class="field"><label>Milestone or topic</label><input type="text" id="sm-topic" placeholder="e.g. Show home now open, topping out ceremony, new phase launch"/></div>
+          <div class="field"><label>Development or property name</label><input type="text" id="sm-dev" placeholder="e.g. The Ashford Residences, Nine Elms"/></div>
+          <div class="field"><label>Location (specific area)</label><input type="text" id="sm-location" placeholder="e.g. Wandsworth, SW18"/></div>
+          <div class="field"><label>Milestone or topic</label><input type="text" id="sm-topic" placeholder="e.g. Show home now open, new instruction, market update, sold agreed"/></div>
           <div class="field full"><label>Key highlights to mention</label><input type="text" id="sm-highlights" placeholder="e.g. River views, concierge, 2-bed from £850,000, completion 2026"/></div>
+          <div class="field full"><label>Local market data (optional but powerful for SEO/GEO)</label><input type="text" id="sm-data" placeholder="e.g. Average 2-bed in Wandsworth now £650,000. Properties selling in 28 days. Rental yields averaging 4.2%."/></div>
           <div class="field full"><label>Target audience</label>
             <div class="chip-row" id="sm-audience">
-              <button class="chip active" onclick="pick(this,'sm-audience')">End-user buyers</button>
+              <button class="chip active" onclick="pick(this,'sm-audience')">Buyers & tenants</button>
               <button class="chip" onclick="pick(this,'sm-audience')">Investors</button>
-              <button class="chip" onclick="pick(this,'sm-audience')">International buyers</button>
+              <button class="chip" onclick="pick(this,'sm-audience')">Vendors & landlords</button>
               <button class="chip" onclick="pick(this,'sm-audience')">General / mixed</button>
+            </div>
+          </div>
+          <div class="field full"><label>Content format</label>
+            <div class="chip-row" id="sm-format">
+              <button class="chip active" onclick="pick(this,'sm-format')">Full week of content</button>
+              <button class="chip" onclick="pick(this,'sm-format')">Q&A post (GEO-optimised)</button>
+              <button class="chip" onclick="pick(this,'sm-format')">Market update post</button>
+              <button class="chip" onclick="pick(this,'sm-format')">Property spotlight</button>
             </div>
           </div>
           <div class="field full"><label>Tone</label>
@@ -605,25 +615,27 @@
         </div>
         <div class="btn-row">
           <button class="primary-btn" id="sm-btn" onclick="genSocial()">Generate content</button>
-          <button class="ghost-btn" onclick="clearForm(['sm-dev','sm-topic','sm-highlights'],'sm-output','sm-err')">Clear</button>
+          <button class="ghost-btn" onclick="clearForm(['sm-dev','sm-location','sm-topic','sm-highlights','sm-data'],'sm-output','sm-err')">Clear</button>
         </div>
         <div class="err-text" id="sm-err"></div>
-        <div class="loading-row" id="sm-load"><div class="spinner"></div><span class="loading-text">Creating your social content...</span></div>
+        <div class="loading-row" id="sm-load"><div class="spinner"></div><span class="loading-text">Creating your SEO and GEO-optimised content...</span></div>
       </div>
       <div class="output-card" id="sm-output">
-        <div class="output-hdr"><span class="output-hdr-label">Generated social content</span></div>
+        <div class="output-hdr"><span class="output-hdr-label">Generated content</span></div>
         <div class="output-sec"><div class="output-sec-label">Instagram caption</div><div class="output-text" id="sm-instagram"></div></div>
         <div class="output-sec"><div class="output-sec-label">LinkedIn post</div><div class="output-text" id="sm-linkedin"></div></div>
+        <div class="output-sec"><div class="output-sec-label">Q&A post (cite-worthy for AI search)</div><div class="output-text" id="sm-qa"></div></div>
         <div class="output-sec"><div class="output-sec-label">Story script</div><div class="output-text" id="sm-story"></div></div>
         <div class="output-sec"><div class="output-sec-label">Newsletter paragraph</div><div class="output-text" id="sm-newsletter"></div></div>
+        <div class="output-sec"><div class="output-sec-label">SEO & GEO keywords used</div><div class="output-text" id="sm-keywords"></div></div>
         <div class="output-sec"><div class="output-sec-label">Hashtags</div><div class="output-text" id="sm-hashtags"></div></div>
         <div class="output-actions">
-          <button class="sm-btn" onclick="copyText(['sm-instagram','sm-linkedin','sm-story','sm-newsletter','sm-hashtags'].map(id=>document.getElementById(id).textContent).join('\n\n'))">Copy all</button>
+          <button class="sm-btn" onclick="copyText(['sm-instagram','sm-linkedin','sm-qa','sm-story','sm-newsletter'].map(function(id){return document.getElementById(id).textContent}).join('\n\n'))">Copy all</button>
+          <button class="sm-btn" onclick="copyText(document.getElementById('sm-qa').textContent)">Copy Q&A post</button>
           <button class="sm-btn" onclick="genSocial()">Regenerate</button>
         </div>
       </div>
-    </div>
-
+    
     <!-- Investor Pack -->
     <div class="page" id="page-investor">
       <div class="page-header">
@@ -1230,35 +1242,35 @@ Return ONLY valid JSON, no markdown, no backticks.`;
 }
 
 async function genSocial() {
-  const dev = document.getElementById('sm-dev').value.trim();
-  const topic = document.getElementById('sm-topic').value.trim();
-  if (!dev || !topic) { showErr('sm-err', 'Please enter development name and topic.'); return; }
-  hideErr('sm-err'); document.getElementById('sm-output').classList.remove('visible');
+  var dev = document.getElementById('sm-dev').value.trim();
+  var topic = document.getElementById('sm-topic').value.trim();
+  if (!dev || !topic) { showErr('sm-err', 'Please enter property name and topic.'); return; }
+  hideErr('sm-err');
+  document.getElementById('sm-output').classList.remove('visible');
   setLoading('sm-load', 'sm-btn', true);
-  const prompt = `You are an expert luxury property social media strategist and SEO/GEO copywriter. Create social content that is optimised for both traditional search engines and AI-powered search tools like ChatGPT, Perplexity and Google SGE. Return ONLY a JSON object with keys: instagram, linkedin, story, newsletter, hashtags.
-- instagram: Compelling caption under 150 words, aspirational, ends with a soft CTA
-- linkedin: Professional post 100-200 words, insight-led, positions the development as a smart choice
-- story: Short punchy script for Instagram/Facebook story — 3-5 lines maximum
-- newsletter: One polished paragraph suitable for a buyer newsletter or email campaign
-- hashtags: 8-10 relevant hashtags including location, property type and luxury keywords
+  var location = document.getElementById('sm-location').value.trim();
+  var highlights = document.getElementById('sm-highlights').value.trim();
+  var marketData = document.getElementById('sm-data').value.trim();
+  var audience = getActive('sm-audience');
+  var format = getActive('sm-format');
+  var tone = getActive('sm-tone');
 
-Development: ${dev}
-Topic/milestone: ${topic}
-${document.getElementById('sm-highlights').value ? 'Highlights: ' + document.getElementById('sm-highlights').value : ''}
-Target audience: ${getActive('sm-audience')}
-Tone: ${getActive('sm-tone')}
-Return ONLY valid JSON, no markdown, no backticks.`;
+  var prompt = 'You are an expert property marketing copywriter and SEO/GEO specialist. Create content that ranks on both traditional search engines AND AI-powered search tools like ChatGPT, Perplexity and Google AI Overviews. Return ONLY a JSON object with keys: instagram, linkedin, qa, story, newsletter, keywords, hashtags. instagram: A compelling caption under 150 words. Naturally include the location and property type as keywords (e.g. "Wandsworth 4-bedroom home"). End with a soft CTA. linkedin: A professional insight-led post 150-200 words. Include specific facts and statistics where provided. Write in a way that positions the agent as a local market authority — this is what AI search tools cite. qa: A question-and-answer format post. Start with a question a buyer or tenant would actually search for (e.g. "What is it like to live in [location]?" or "Is [area] a good place to invest?"). Answer it with specific, factual, authoritative information. This format is highly favoured by AI search engines and likely to be cited in ChatGPT and Perplexity responses. Include any provided market data. Minimum 150 words. story: Short punchy script for Instagram or Facebook story — 3-5 lines maximum, hook first. newsletter: One polished paragraph for a buyer or landlord newsletter — professional, factual, locally specific. keywords: List the 5-8 SEO and GEO keywords and phrases naturally used throughout the content — location-specific, intent-based (e.g. "luxury flats Wandsworth for sale", "best lettings agent Nine Elms"). hashtags: 8-10 hashtags including location, property type, lifestyle and premium property tags. Property: ' + dev + '. Location: ' + location + '. Topic: ' + topic + '. Highlights: ' + highlights + '. Market data to include: ' + (marketData || 'Use general authoritative language about the premium property market in this area') + '. Target audience: ' + audience + '. Format preference: ' + format + '. Tone: ' + tone + '. Return ONLY valid JSON, no markdown, no backticks.';
+
   try {
-    const p = await callAPI(prompt);
+    var p = await callAPI(prompt);
     document.getElementById('sm-instagram').textContent = p.instagram || '';
     document.getElementById('sm-linkedin').textContent = p.linkedin || '';
+    document.getElementById('sm-qa').textContent = p.qa || '';
     document.getElementById('sm-story').textContent = p.story || '';
     document.getElementById('sm-newsletter').textContent = p.newsletter || '';
+    document.getElementById('sm-keywords').textContent = p.keywords || '';
     document.getElementById('sm-hashtags').textContent = p.hashtags || '';
     document.getElementById('sm-output').classList.add('visible');
   } catch(e) { showErr('sm-err', 'Something went wrong. Please try again.'); }
   finally { setLoading('sm-load', 'sm-btn', false); }
 }
+
 
 async function genInvestor() {
   const dev = document.getElementById('ip-dev').value.trim();
